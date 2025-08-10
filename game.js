@@ -143,37 +143,56 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
+// --- Stage Select Modal ---
+const stageSelectModal = document.getElementById('stage-select-modal');
+const stageInput = document.getElementById('stage-input');
+const stageGoBtn = document.getElementById('stage-go-btn');
+const stageCancelBtn = document.getElementById('stage-cancel-btn');
+
+function showStageSelectModal() {
+    stageInput.value = '';
+    stageSelectModal.style.display = 'block';
+}
+
+function hideStageSelectModal() {
+    stageSelectModal.style.display = 'none';
+}
+
 function handleStageSelect(x, y) {
-    if (gameStatus !== 'title') {
-        return; // Only works on title screen
+    if (gameStatus !== 'title' || stageSelectModal.style.display === 'block') {
+        return; // Only works on title screen and if modal is not already open
     }
 
-    // Define sun's position and dimensions again
+    // Define sun's position and dimensions
     const taiyoWidth = 200;
     const taiyoHeight = 200;
     const taiyoX = canvas.width - taiyoWidth - 20;
     const taiyoY = 20;
 
-    // Check if click is within the sun's bounds
+    // Check if tap/click is within the sun's bounds
     if (x >= taiyoX && x <= taiyoX + taiyoWidth &&
         y >= taiyoY && y <= taiyoY + taiyoHeight) {
-
-        const stageInput = prompt(`Enter stage (1-${maxStages}):`);
-        if (stageInput) {
-            const selectedStage = parseInt(stageInput, 10);
-            if (!isNaN(selectedStage) && selectedStage > 0 && selectedStage <= maxStages) {
-                currentStage = selectedStage;
-                gameStatus = 'showingStageIntro';
-                setTimeout(() => {
-                    gameStatus = 'playing';
-                }, stageIntroDuration);
-                needsStageReset = true;
-            } else {
-                alert(`Invalid stage. Please enter a number between 1 and ${maxStages}.`);
-            }
-        }
+        showStageSelectModal();
     }
 }
+
+function confirmStageSelection() {
+    const selectedStage = parseInt(stageInput.value, 10);
+    if (!isNaN(selectedStage) && selectedStage > 0 && selectedStage <= maxStages) {
+        currentStage = selectedStage;
+        gameStatus = 'showingStageIntro';
+        setTimeout(() => {
+            gameStatus = 'playing';
+        }, stageIntroDuration);
+        needsStageReset = true;
+        hideStageSelectModal();
+    } else {
+        alert(`無効なステージです。1から${maxStages}の間の数字を入力してください。`);
+    }
+}
+
+stageGoBtn.addEventListener('click', confirmStageSelection);
+stageCancelBtn.addEventListener('click', hideStageSelectModal);
 
 canvas.addEventListener('mousedown', (e) => {
     const rect = canvas.getBoundingClientRect();
