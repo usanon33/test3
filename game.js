@@ -143,14 +143,10 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-canvas.addEventListener('mousedown', (e) => {
+function handleStageSelect(x, y) {
     if (gameStatus !== 'title') {
         return; // Only works on title screen
     }
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
 
     // Define sun's position and dimensions again
     const taiyoWidth = 200;
@@ -159,8 +155,8 @@ canvas.addEventListener('mousedown', (e) => {
     const taiyoY = 20;
 
     // Check if click is within the sun's bounds
-    if (mouseX >= taiyoX && mouseX <= taiyoX + taiyoWidth &&
-        mouseY >= taiyoY && mouseY <= taiyoY + taiyoHeight) {
+    if (x >= taiyoX && x <= taiyoX + taiyoWidth &&
+        y >= taiyoY && y <= taiyoY + taiyoHeight) {
 
         const stageInput = prompt(`Enter stage (1-${maxStages}):`);
         if (stageInput) {
@@ -177,6 +173,22 @@ canvas.addEventListener('mousedown', (e) => {
             }
         }
     }
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    handleStageSelect(mouseX, mouseY);
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Prevent mouse event emulation
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    handleStageSelect(touchX, touchY);
 });
 
 function createHorde() {
