@@ -197,17 +197,21 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
     canvas.addEventListener('mousedown', (e) => {
         const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
         handleStageSelect(mouseX, mouseY);
     });
 
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault(); // Prevent mouse event emulation
         const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
         const touch = e.touches[0];
-        const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
         handleStageSelect(touchX, touchY);
     });
 
