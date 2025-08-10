@@ -86,6 +86,13 @@ kumoImage.onload = () => {
     kumoImageLoaded = true;
 };
 
+const endingImage = new Image();
+endingImage.src = 'ending.png';
+let endingImageLoaded = false;
+endingImage.onload = () => {
+    endingImageLoaded = true;
+};
+
 // Horde properties
 const hordeRows = 3;
 const hordeCols = 10;
@@ -136,6 +143,42 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
+canvas.addEventListener('mousedown', (e) => {
+    if (gameStatus !== 'title') {
+        return; // Only works on title screen
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Define sun's position and dimensions again
+    const taiyoWidth = 200;
+    const taiyoHeight = 200;
+    const taiyoX = canvas.width - taiyoWidth - 20;
+    const taiyoY = 20;
+
+    // Check if click is within the sun's bounds
+    if (mouseX >= taiyoX && mouseX <= taiyoX + taiyoWidth &&
+        mouseY >= taiyoY && mouseY <= taiyoY + taiyoHeight) {
+
+        const stageInput = prompt(`Enter stage (1-${maxStages}):`);
+        if (stageInput) {
+            const selectedStage = parseInt(stageInput, 10);
+            if (!isNaN(selectedStage) && selectedStage > 0 && selectedStage <= maxStages) {
+                currentStage = selectedStage;
+                gameStatus = 'showingStageIntro';
+                setTimeout(() => {
+                    gameStatus = 'playing';
+                }, stageIntroDuration);
+                needsStageReset = true;
+            } else {
+                alert(`Invalid stage. Please enter a number between 1 and ${maxStages}.`);
+            }
+        }
+    }
+});
+
 function createHorde() {
     for (let row = 0; row < hordeRows; row++) {
         for (let col = 0; col < hordeCols; col++) {
@@ -150,6 +193,11 @@ function createHorde() {
 }
 
 function createEnemy() {
+    enemySpeed = 3; // Reset to default
+    if (currentStage === 10) {
+        enemySpeed = 6; // Double speed for stage 10
+    }
+
     let hp = enemyInitialHP;
     if (currentStage === 2) {
         hp = 12;
@@ -250,8 +298,10 @@ function updateEnemy() {
     let fireRate = 0.05;
     if (currentStage >= 3 && currentStage <= 5) {
         fireRate = 0.075;
-    } else if (currentStage >= 6) {
+    } else if (currentStage >= 6 && currentStage < 10) {
         fireRate = 0.1;
+    } else if (currentStage === 10) {
+        fireRate = 0.15; // 0.1 * 1.5
     }
 
     if (Math.random() < fireRate) {
@@ -484,17 +534,20 @@ function draw() {
     }
 
     if (gameStatus !== 'playing') {
-        ctx.font = '60px Arial';
-        let message = '';
         if (gameStatus === 'win') {
-            message = 'You Win!';
+            if (endingImageLoaded) {
+                ctx.drawImage(endingImage, 0, 0, canvas.width, canvas.height);
+            }
+        } else {
+            ctx.font = '60px Arial';
+            let message = '';
+            if (gameStatus === 'lose') message = 'Game Over';
+            if (gameStatus === 'gameOverCountdown') {
+                message = `Game Over! Returning to title in ${gameOverCountdownTime}`;
+                ctx.font = '30px Arial'; // Smaller font for countdown
+            }
+            ctx.fillText(message, canvas.width / 2 - ctx.measureText(message).width / 2, canvas.height / 2);
         }
-        if (gameStatus === 'lose') message = 'Game Over';
-        if (gameStatus === 'gameOverCountdown') {
-            message = `Game Over! Returning to title in ${gameOverCountdownTime}`;
-            ctx.font = '30px Arial'; // Smaller font for countdown
-        }
-        ctx.fillText(message, canvas.width / 2 - ctx.measureText(message).width / 2, canvas.height / 2);
     }
 }
 
