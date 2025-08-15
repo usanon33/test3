@@ -18,6 +18,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
     let gameOverCountdownTime = 3; // Initial countdown time
     let kumoX = -200; // Initial x position of the cloud
     let kumo2X = canvas.width;
+    let powerUpItems = [];
+    let playerPower = 1;
 
     // Image assets
     const playerImage = new Image();
@@ -304,15 +306,73 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     dx = 1;
                 }
                 const newBullet = { x: shooterX - bulletWidth / 2, y: shooterY - bulletHeight, width: bulletWidth, height: bulletHeight, dx: dx, dy: 1 };
-                console.log('Pushing player bullet:', newBullet);
                 hordeBullets.push(newBullet);
+
+                if (playerPower > 1) {
+                    for (let i = 1; i < playerPower; i++) {
+                        const offsetX = i * 10 * (i % 2 === 0 ? -1 : 1); // alternate offset
+                        hordeBullets.push({ x: shooterX - bulletWidth / 2 + offsetX, y: shooterY - bulletHeight, width: bulletWidth, height: bulletHeight, dx: dx, dy: 1 });
+                    }
+                }
+                
                 keys[' '] = false; // Prevent continuous shooting
+            }
+        }
+    }
+
+    function spawnPowerUp() {
+        if (currentStage >= 4 && Math.random() < 0.001) { // Low probability to spawn
+            powerUpItems.push({
+                x: Math.random() * canvas.width,
+                y: canvas.height,
+                width: 30,
+                height: 30,
+                dy: -2 // speed of moving up
+            });
+        }
+    }
+
+    function updatePowerUps() {
+        for (let i = powerUpItems.length - 1; i >= 0; i--) {
+            const item = powerUpItems[i];
+            item.y += item.dy;
+
+            // Remove if it goes off-screen
+            if (item.y < 0) {
+                powerUpItems.splice(i, 1);
+                continue;
+            }
+
+            // Check for collision with player's horde
+            for (let j = playerHorde.length - 1; j >= 0; j--) {
+                const block = playerHorde[j];
+                if (item.x < block.x + block.width &&
+                    item.x + item.width > block.x &&
+                    item.y < block.y + block.height &&
+                    item.y + item.height > block.y) {
+                    powerUpItems.splice(i, 1);
+                    playerPower++; // Increase player power
+                    break; 
+                }
+            }
+        }
+    }
+
+    function drawPowerUps() {
+        for (const item of powerUpItems) {
+            if (redImageLoaded) {
+                ctx.drawImage(redImage, item.x, item.y, item.width, item.height);
+            } else {
+                ctx.fillStyle = 'orange';
+                ctx.fillRect(item.x, item.y, item.width, item.height);
             }
         }
     }
 
     function updateEnemy() {
         if (!enemy.alive) return;
+
+        spawnPowerUp();
 
         // Randomly change direction
         if (Math.random() < 0.02) {
@@ -447,6 +507,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     enemyBullets = [];
                     score = 0;
                     currentStage = 1;
+                    playerPower = 1;
+                    powerUpItems = [];
                     createHorde();
                     createEnemy();
                 }
@@ -458,6 +520,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         playerHorde = [];
         hordeBullets = [];
         enemyBullets = [];
+        powerUpItems = [];
+        playerPower = 1;
         createHorde();
         createEnemy();
     }
@@ -554,6 +618,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         ctx.font = '24px Arial';
         ctx.fillText(`Score: ${score}`, 10, 30);
         ctx.fillText(`Stage: ${currentStage}`, 10, 60);
+        ctx.fillText(`Power: ${playerPower}`, 10, 90);
+
 
         // Draw horde bullets
         ctx.fillStyle = 'yellow';
@@ -566,6 +632,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         for (const bullet of enemyBullets) {
             ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
         }
+
+        drawPowerUps();
 
         if (gameStatus !== 'playing') {
             if (gameStatus === 'win') {
@@ -595,6 +663,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             hordeShoot();
             updateEnemy();
             updateBullets();
+            updatePowerUps();
             checkGameStatus();
         } else if (gameStatus === 'title') {
             titleRotation += 0.005; // Adjust rotation speed as needed
