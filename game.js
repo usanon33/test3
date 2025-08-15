@@ -20,6 +20,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
     let kumo2X = canvas.width;
     let powerUpItems = [];
     let playerPower = 1;
+    let stageStartTime;
+    let powerUpSpawnedForStage = false;
 
     // Image assets
     const playerImage = new Image();
@@ -131,6 +133,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             gameStatus = 'showingStageIntro';
             setTimeout(() => {
                 gameStatus = 'playing';
+                stageStartTime = Date.now();
             }, stageIntroDuration);
             return;
         }
@@ -186,6 +189,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             gameStatus = 'showingStageIntro';
             setTimeout(() => {
                 gameStatus = 'playing';
+                stageStartTime = Date.now();
             }, stageIntroDuration);
             needsStageReset = true;
             hideStageSelectModal();
@@ -321,14 +325,18 @@ window.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function spawnPowerUp() {
-        if (currentStage >= 4 && Math.random() < 0.001) { // Low probability to spawn
-            powerUpItems.push({
-                x: Math.random() * canvas.width,
-                y: canvas.height,
-                width: 30,
-                height: 30,
-                dy: -2 // speed of moving up
-            });
+        if (currentStage >= 4 && !powerUpSpawnedForStage) {
+            const elapsedTime = Date.now() - stageStartTime;
+            if (elapsedTime > 7000) { // 7 seconds
+                powerUpItems.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height,
+                    width: 30,
+                    height: 30,
+                    dy: -2 // speed of moving up
+                });
+                powerUpSpawnedForStage = true; // Ensure it only spawns once per stage
+            }
         }
     }
 
@@ -443,6 +451,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                         gameStatus = 'showingStageIntro';
                         setTimeout(() => {
                             gameStatus = 'playing';
+                            stageStartTime = Date.now();
                         }, stageIntroDuration);
                         needsStageReset = true; // Reset stage after intro
                         highestStageReached = Math.max(highestStageReached, currentStage);
@@ -511,6 +520,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     powerUpItems = [];
                     createHorde();
                     createEnemy();
+                    stageStartTime = Date.now();
+                    powerUpSpawnedForStage = false;
                 }
             }, 1000);
         }
@@ -524,6 +535,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         playerPower = 1;
         createHorde();
         createEnemy();
+        stageStartTime = Date.now();
+        powerUpSpawnedForStage = false;
     }
 
     function draw() {
@@ -685,6 +698,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         enemyImageLoaded = true;
         createHorde();
         createEnemy();
+        stageStartTime = Date.now();
+        powerUpSpawnedForStage = false;
         gameLoop();
     };
 
@@ -693,6 +708,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
         console.error("Failed to load enemy image.");
         createHorde();
         createEnemy();
+        stageStartTime = Date.now();
+        powerUpSpawnedForStage = false;
         gameLoop();
     };
 
@@ -706,6 +723,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             gameStatus = 'showingStageIntro';
             setTimeout(() => {
                 gameStatus = 'playing';
+                stageStartTime = Date.now();
             }, stageIntroDuration);
         }
     }
