@@ -331,7 +331,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             enemy.x = nextX;
         }
 
-        let fireRate = 0.05;
+        let fireRate = 0.025;
         if (currentStage >= 3 && currentStage <= 5) {
             fireRate = 0.075;
         } else if (currentStage >= 6 && currentStage < 10) {
